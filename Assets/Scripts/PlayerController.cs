@@ -1,10 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using DG.Tweening; 
+using DG.Tweening;
+using TMPro; 
+
 public class PlayerController : MonoBehaviour
 {
-
+    public static PlayerController Instance; 
     [SerializeField]
     private float rotationSpeed = 3f;
 
@@ -37,16 +39,32 @@ public class PlayerController : MonoBehaviour
     private float timer = 0;
 
     [SerializeField]
-    private AudioSource hitSound, heartSound; 
+    private AudioSource hitSound, heartSound;
 
 
+    [SerializeField]
+    private RectTransform textDebuffParent;
+    [SerializeField]
+    private GameObject textDebuffPrefab; 
+
+    [SerializeField]
+    private List<Debuff> debuffPrefabList;
+
+    private List<Debuff> debuffList;
+
+    private bool limitSpeed = false; 
+
+    private float moveDebuff = 0, rotationDebuff = 0, hitDebuff = 0;
+    public int numberOfHeartsCollected = 0; 
     // Start is called before the first frame update
     void Start()
     {
+        Instance = this; 
         Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Confined; 
+        Cursor.lockState = CursorLockMode.Locked; 
         rb = this.GetComponent<Rigidbody>();
         hand = this.transform.GetChild(0);
+        debuffList = new List<Debuff>(); 
         originalHandRotation = hand.transform.rotation.eulerAngles; 
     }
 
@@ -57,17 +75,95 @@ public class PlayerController : MonoBehaviour
         UpdateRotation();
         ClickDown();
         CheckBetaTester(); 
+    }
 
 
+    public void SetLimitSpeed()
+    {
+        limitSpeed = true; 
+    }
 
-
+    public void QuitLimitSpeed()
+    {
+        limitSpeed = false; 
     }
 
     public void OnBuffHit()
     {
-        Debug.Log("Funca");
-        //TODO
+        numberOfHeartsCollected++; 
+        if (debuffList.Count > 0)
+        {
+            debuffList[debuffList.Count - 1].difficulty--;
+            if (debuffList[debuffList.Count - 1].difficulty <= 0)
+            {
+                switch (debuffList[debuffList.Count - 1].type)
+                {
+                    case DebuffType.HITSLOW:
+                        hitDebuff = -hitDebuff;
+                        break;
+
+                    case DebuffType.MOVESLOW:
+                        moveDebuff = -moveDebuff;
+                        break;
+
+                    case DebuffType.ROTATESLOW:
+                        rotationDebuff = -rotationDebuff;
+                        break;
+                }
+
+                Destroy(debuffList[debuffList.Count - 1].tmpReference.gameObject);
+
+                debuffList.RemoveAt(debuffList.Count - 1);
+                if (debuffList.Count <= 1)
+                {
+                    DeathController.Instance.DeactivateDeathCounter(); 
+                }
+            }
+
+            else
+            {
+                debuffList[debuffList.Count - 1].tmpReference.DOFade(0.2f * debuffList[debuffList.Count - 1].difficulty, 0.5f);
+            }
+        }
         heartSound.Play(); 
+    }
+
+    public void NextDebuff()
+    {
+        if (debuffPrefabList.Count > 0)
+        {
+            int aux = 0;
+            var debuff = debuffPrefabList[aux];
+
+            switch (debuff.type)
+            {
+                case DebuffType.HITSLOW:
+                    hitDebuff = debuff.value;
+                    break;
+
+                case DebuffType.MOVESLOW:
+                    moveDebuff = debuff.value;
+                    break;
+
+                case DebuffType.ROTATESLOW:
+                    rotationDebuff = debuff.value;
+                    break;
+            }
+
+            var go = Instantiate(textDebuffPrefab, textDebuffParent);
+            debuff.tmpReference = go.GetComponent<TextMeshProUGUI>();
+            debuff.tmpReference.text = debuff.text;
+            debuffList.Add(debuff);
+            if (debuffList.Count >= 2)
+            {
+                DeathController.Instance.ActivateDeathCounter(); 
+            }
+            debuffPrefabList.RemoveAt(aux);
+        }
+        else
+        {
+            //End
+        }
     }
 
     private void CheckBetaTester()
@@ -96,8 +192,8 @@ public class PlayerController : MonoBehaviour
             {
 
 
-                this.transform.DOShakeRotation(0.1f, 20, 20);
-                hand.DOLocalRotate(Vector3.right * 60, speedClick).onComplete += () =>
+                this.transform.DOShakeRotation(0.1f, 10, 20);
+                hand.DOLocalRotate(Vector3.right * 60, speedClick + hitDebuff).onComplete += () =>
                 {
                     RaycastHit hit;
                     Vector3 origin = this.transform.position;
@@ -114,6 +210,14 @@ public class PlayerController : MonoBehaviour
                             {
                                
                                 cube.ReceiveHit();
+                            }
+                            else
+                            {
+                                var secretButton = hit.collider.GetComponent<SecretButton>(); 
+                                if (secretButton!= null)
+                                {
+                                    secretButton.OnRaycastHit(); 
+                                }
                             }
                         }
                     }
@@ -132,15 +236,39 @@ public class PlayerController : MonoBehaviour
         rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
         rb.velocity = rb.velocity.normalized;
         
-        rb.velocity *= speed;
+        rb.velocity *= (speed - moveDebuff);
         rb.velocity = new Vector3(rb.velocity.x, ySpeed, rb.velocity.z); 
+
+        if (limitSpeed)
+        {
+            rb.velocity = new Vector3(Input.GetAxisRaw("Vertical") < -0.8f ? rb.velocity.x : 0, ySpeed, Input.GetAxisRaw("Vertical") < -0.8f ? rb.velocity.z : 0);
+        }
+
     }
 
     private void UpdateRotation()
     {
 
-        actualRotation += new Vector3(rotationSpeed * Input.GetAxis("Mouse Y") * Time.deltaTime, rotationSpeed * Input.GetAxis("Mouse X") * Time.deltaTime, 0);
+        actualRotation += new Vector3((rotationSpeed - rotationDebuff) * Input.GetAxis("Mouse Y") * Time.deltaTime, (rotationSpeed - rotationDebuff) * Input.GetAxis("Mouse X") * Time.deltaTime, 0);
         actualRotation = new Vector3(Mathf.Clamp(actualRotation.x, rotationLimitDown.x, rotationLimitUp.x), actualRotation.y, 0);
         this.transform.rotation = Quaternion.Euler(actualRotation);
     }
+}
+
+[System.Serializable]
+public class Debuff
+{
+    public DebuffType type;
+    public float value;
+    public string text;
+    public int difficulty;
+    public TextMeshProUGUI tmpReference; 
+}
+
+[System.Serializable]
+public enum DebuffType
+{
+    HITSLOW,
+    ROTATESLOW,
+    MOVESLOW
 }

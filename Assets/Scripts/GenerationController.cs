@@ -5,7 +5,7 @@ using UnityEngine;
 public class GenerationController : MonoBehaviour
 {
 
-    public static GenerationController Instance; 
+    public static GenerationController Instance;
 
     [SerializeField]
     private GameObject cubePrefab;
@@ -18,34 +18,37 @@ public class GenerationController : MonoBehaviour
     private List<GameObject> prefabLevelList = null;
     [SerializeField]
     private GameObject betaLevel = null;
-    private GameObject lastParent; 
+    private GameObject lastParent;
     private int positionY = 0;
 
     [SerializeField]
     private GameObject heartPrefab;
 
+    [SerializeField]
+    private GameObject levelDefault;
     public List<GameObject> hearts = null;
-    private int actualNumberOfHearts = 2; 
+    private int actualNumberOfHearts = 2;
     void Start()
     {
-        hearts = new List<GameObject>(); 
-        Instance = this; 
-        GenerateLayer(); 
+        CubeController.actualDifficulty = 2; 
+        hearts = new List<GameObject>();
+        Instance = this;
+        GenerateLayer();
     }
 
     private void GenerateLayer(float x = 0, float y = -11)
     {
-        CubeController.actualDifficulty++; 
+        CubeController.actualDifficulty++;
         var originX = x - width / 2;
-        var originY = y - height /2; 
+        var originY = y - height / 2;
         positionY -= depthGeneration - 10;
         var goParent = new GameObject("Layer" + positionY.ToString());
 
 
         List<Vector3Int> heartList = new List<Vector3Int>();
-        for (int i = 0; i< actualNumberOfHearts; i++)
+        for (int i = 0; i < actualNumberOfHearts; i++)
         {
-            heartList.Add(new Vector3Int(Random.Range(3, width - 3), Random.Range(3, depthGeneration - 3), Random.Range(3, height))); 
+            heartList.Add(new Vector3Int(Random.Range(3, width - 3), Random.Range(3, depthGeneration - 3), Random.Range(3, height)));
         }
 
 
@@ -55,7 +58,7 @@ public class GenerationController : MonoBehaviour
             {
                 for (int j = 0; j < width; j++)
                 {
-                    if (!InstantiateHearts(heartList, j,i,z))
+                    if (!InstantiateHearts(heartList, j, i, z))
                     {
                         var go = Instantiate(cubePrefab, new Vector3(originX, positionY, originY), Quaternion.identity);
 
@@ -74,38 +77,38 @@ public class GenerationController : MonoBehaviour
                     else
                     {
                         var heart = Instantiate(heartPrefab, new Vector3(originX, positionY, originY), Quaternion.identity);
-                        heart.transform.parent = goParent.transform; 
-                        hearts.Add(heart); 
+                        heart.transform.parent = goParent.transform;
+                        hearts.Add(heart);
                     }
                 }
                 originY++;
-                originX = x - width/2;
+                originX = x - width / 2;
 
             }
-            originY = y - height/2;
-            positionY--; 
+            originY = y - height / 2;
+            positionY--;
         }
 
-        lastParent = goParent; 
+        lastParent = goParent;
     }
 
 
-    
+
 
     private bool CheckHeart(List<Vector3Int> hearts, int x, int y, int depth)
     {
         bool value = false;
 
-        for (int i = 0; i<hearts.Count; i++)
+        for (int i = 0; i < hearts.Count; i++)
         {
-            if (x > hearts[i].x-3 && x< hearts[i].x +3 && depth > hearts[i].y -3 && depth < hearts[i].y +3 && y > hearts[i].z -3 && y < hearts[i].z + 3)
+            if (x > hearts[i].x - 3 && x < hearts[i].x + 3 && depth > hearts[i].y - 3 && depth < hearts[i].y + 3 && y > hearts[i].z - 3 && y < hearts[i].z + 3)
             {
-                
+
             }
         }
 
 
-        return value; 
+        return value;
     }
 
 
@@ -126,23 +129,35 @@ public class GenerationController : MonoBehaviour
 
     public void InstantiateLevel(Vector3 lastCubePosition)
     {
-       var go =  Instantiate(prefabLevelList[Random.Range(0, prefabLevelList.Count)]);
-       positionY -= depthGeneration - 10;
-       go.transform.position = new Vector3(lastCubePosition.x, positionY, lastCubePosition.z);
-       positionY -= depthGeneration; 
-       Destroy(lastParent);
-       GenerateLayer(lastCubePosition.x -20, lastCubePosition.z); 
-      
+        GameObject go = null;
+
+        if (prefabLevelList.Count > 0)
+        {
+            int aux = Random.Range(0, prefabLevelList.Count);
+            go = Instantiate(prefabLevelList[aux]);
+            prefabLevelList.RemoveAt(aux);
+        }
+        else
+        {
+            go = Instantiate(levelDefault);
+        }
+        positionY -= depthGeneration - 10;
+        go.transform.position = new Vector3(lastCubePosition.x, positionY, lastCubePosition.z);
+        positionY -= depthGeneration;
+        Destroy(lastParent);
+        actualNumberOfHearts += 2;
+        GenerateLayer(lastCubePosition.x - 20, lastCubePosition.z);
+        PlayerController.Instance.NextDebuff();
     }
 
     public void InstantiateBetaTesterLevel(Vector3 position)
     {
 
-        betaLevel.transform.position = position + Vector3.down * 30; 
+        betaLevel.transform.position = position + Vector3.down * 30;
     }
 
     void Update()
     {
-        
+
     }
 }

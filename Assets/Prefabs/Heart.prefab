@@ -24,7 +24,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 486774462795379115}
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 3.481, y: 1.238, z: -18.451}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -58,7 +58,6 @@ GameObject:
   - component: {fileID: 2019916282209109911}
   - component: {fileID: 720636527749319935}
   - component: {fileID: 720636527749319928}
-  - component: {fileID: 720636527749319934}
   m_Layer: 0
   m_Name: default
   m_TagString: Untagged
@@ -155,16 +154,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88557c68a987d8c4c943aaf3c1785b50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &720636527749319934
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8884640177704995186}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 58c375c0b0e7f0e4fba7c23efb66cfa1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  angularVelocity: 100
+  cuteText: {fileID: 1251054745608657254, guid: 85b9be6ccc90d8a4899252af3ce49ed6, type: 3}

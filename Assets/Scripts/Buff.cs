@@ -4,11 +4,12 @@ using UnityEngine;
 
 public class Buff : MonoBehaviour
 {
+
     private void OnTriggerEnter(Collider other)
     {
 
         other.GetComponentInParent<PlayerController>().OnBuffHit();
-
+        CuteText.Instance.Init(); 
         Destroy(this.gameObject); 
     }
 
