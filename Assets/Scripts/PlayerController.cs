@@ -249,7 +249,7 @@ public class PlayerController : MonoBehaviour
     private void UpdateRotation()
     {
 
-        actualRotation += new Vector3((rotationSpeed - rotationDebuff) * Input.GetAxis("Mouse Y") * Time.deltaTime, (rotationSpeed - rotationDebuff) * Input.GetAxis("Mouse X") * Time.deltaTime, 0);
+        actualRotation += new Vector3((rotationSpeed - rotationDebuff) * -Input.GetAxis("Mouse Y") * Time.deltaTime, (rotationSpeed - rotationDebuff) * Input.GetAxis("Mouse X") * Time.deltaTime, 0);
         actualRotation = new Vector3(Mathf.Clamp(actualRotation.x, rotationLimitDown.x, rotationLimitUp.x), actualRotation.y, 0);
         this.transform.rotation = Quaternion.Euler(actualRotation);
     }
